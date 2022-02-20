@@ -193,7 +193,7 @@ const Home: NextPage = () => {
           <span className={`${wsState.color}`}>{wsState.state}</span>
         </header>
 
-        <canvas className='h-[calc(100%-10rem)] w-full z-10' id='canvas'></canvas>
+        <canvas className='h-full w-full' id='canvas'></canvas>
 
         <footer className='h-20 w-full fixed bottom-0 left-0 right-0 flex justify-center items-center flex-col'>
           <a href='https://github.com/tanishq-singh-2301' rel="noreferrer" target="_blank" className='underline underline-offset-4 hover:text-gray-500'>By Tanishq Singh</a>
