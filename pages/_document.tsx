@@ -11,10 +11,10 @@ class MyDocument extends Document {
             <Html>
                 <Head>
                     <meta name="apple-mobile-web-app-capable" content="yes" />
-                    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+                    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
                     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
                     <link rel="manifest" href="/manifest.json" />
-                    <meta name="theme-color" content="#121212" />
+                    <meta name="theme-color" content="#fff" />
 
                     <link rel="apple-touch-icon" href="/splash-screen/apple-icon-180.png" />
                     <link rel="apple-touch-startup-image" href="/splash-screen/apple-splash-2048-2732.jpg" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" />

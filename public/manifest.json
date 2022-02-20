@@ -1,10 +1,10 @@
 {
-    "name": "Spotify",
-    "short_name": "Spotify",
+    "name": "Socket Canvas",
+    "short_name": "Socket Canvas",
     "display": "standalone",
     "orientation": "portrait",
-    "theme_color": "#121212",
-    "background_color": "#121212",
+    "theme_color": "#fff",
+    "background_color": "#fff",
     "start_url": "/",
     "icons": [
         {

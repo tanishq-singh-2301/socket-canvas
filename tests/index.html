@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Draw with the mouse in a HTML5 canvas</title>
+
+    <style>
+        html,
+        body,
+        * {
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        #canvas {
+            height: 100vh;
+            width: 100vw;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+</body>
+
+<script>
+    window.addEventListener('load', () => {
+        resize();
+
+        document.addEventListener('mousedown', startPainting);
+        document.addEventListener('mouseup', stopPainting);
+        document.addEventListener('mousemove', sketch);
+
+        document.addEventListener('touchstart', startPainting);
+        document.addEventListener('touchend', stopPainting);
+        document.addEventListener('touchmove', sketch);
+
+        window.addEventListener('resize', resize);
+    });
+
+    const canvas = document.querySelector('#canvas');
+    const ctx = canvas.getContext('2d');
+    let coord = { x: 0, y: 0 };
+    let paint = false;
+
+    const resize = () => {
+        ctx.canvas.width = window.innerWidth;
+        ctx.canvas.height = window.innerHeight;
+    }
+
+
+    const getPosition = (event) => {
+        coord.x = event.clientX - canvas.offsetLeft;
+        coord.y = event.clientY - canvas.offsetTop;
+    }
+
+    const getPositionTouch = (event) => {
+        coord.x = event.touches[0].clientX - canvas.offsetLeft;
+        coord.y = event.touches[0].clientY - canvas.offsetTop;
+    }
+
+    const startPainting = (event) => {
+        paint = true;
+
+        if (event.touches)
+            getPositionTouch(event);
+
+        else
+            getPosition(event);
+    }
+
+    const stopPainting = () => paint = false;
+
+    const sketch = (event) => {
+        if (!paint) return;
+
+        ctx.beginPath();
+
+        ctx.lineWidth = 1;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = 'black';
+
+        ctx.moveTo(coord.x, coord.y);
+
+        if (event.touches)
+            getPositionTouch(event);
+
+        else
+            getPosition(event);
+
+        ctx.lineTo(coord.x, coord.y);
+
+        ctx.stroke();
+    }
+
+</script>
+
+</html>
