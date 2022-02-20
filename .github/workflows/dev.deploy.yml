@@ -47,7 +47,7 @@ jobs:
 
   frontend_deploy:
     needs: [frontend_test]
-    name: deploy in production
+    name: deploy in dev
     runs-on: ubuntu-latest
 
     steps:

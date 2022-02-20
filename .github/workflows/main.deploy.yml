@@ -99,12 +99,14 @@ jobs:
           for fun in socket-canvas ; do
 
             cd ${fun}
+          
+            npm run install
+            npm run build
 
-            if [[ -f "index.js" ]]; then
-              zip -j deploy.zip ./*
-              aws lambda update-function-code --function-name=${fun} --zip-file=fileb://deploy.zip
-            fi
+            zip -j deploy.zip ./dist/*
+            aws lambda update-function-code --function-name=${fun} --zip-file=fileb://deploy.zip
             
+            cd ..
             cd ..
 
           done
