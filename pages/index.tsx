@@ -3,13 +3,10 @@ import Head from 'next/head';
 import { useEffect, useState } from 'react';
 
 const getRandomColor: Function = (): string => {
-  var letters: string = '0123456789ABCDEF';
-  var color: string = '#';
+  const colors: Array<string> = ["111827", "171717", "991b1b", "9a3412", "f59e0b", "3f6212", "16a34a", "0d9488", "0284c7", "1e40af", "6d28d9", "86198f", "9d174d", "f43f5e"];
+  const randomColour: number = Math.floor(Math.random() * colors.length);
 
-  for (var i = 0; i < 6; i++)
-    color += letters[Math.floor(Math.random() * 16)];
-
-  return color;
+  return "#".concat(colors[randomColour]);
 }
 
 const websocketUrl: string = process.env.NEXT_PUBLIC_WS_ENDPOINT as string || "no-link";
@@ -58,8 +55,40 @@ const Home: NextPage = () => {
       if (isBrowser)
         return new WebSocket(websocketUrl);
     } catch (error) { }
+
     return null;
   });
+
+  useEffect(() => {
+    if (wsInstance) {
+      wsInstance.onopen = () => setWsState({ state: "Connected", color: "text-green-700" });
+      wsInstance.onclose = () => setWsState({ state: "Closed", color: "text-red-600" });
+      wsInstance.onmessage = (messageEvent: MessageEvent<any>) => {
+        const { data: RecievedData } = messageEvent;
+        const data: JSON = JSON.parse(RecievedData);
+        const { action, body }: any = data;
+
+        if (action === "draw") {
+          const canvas: HTMLCanvasElement | null = document.querySelector("#canvas");
+
+          if (canvas) {
+            const ctx: CanvasRenderingContext2D = canvas.getContext("2d")!;
+
+            ctx.beginPath();
+
+            ctx.lineWidth = lineWidth;
+            ctx.lineCap = lineCap;
+            ctx.strokeStyle = body?.strokeStyle || "black";
+
+            const { x: lx, y: ly } = body.lineTo;
+            ctx.lineTo(lx, ly);
+
+            ctx.stroke();
+          }
+        }
+      }
+    }
+  }, [wsInstance]);
 
   useEffect(() => {
     const canvas: HTMLCanvasElement | null = document.querySelector("#canvas");
@@ -80,15 +109,6 @@ const Home: NextPage = () => {
 
   }, []);
 
-  if (wsInstance?.readyState === 2 || wsInstance?.readyState === 3) {
-    wsInstance.close();
-
-    const newWs: WebSocket = new WebSocket(websocketUrl);
-    setWsInstance(newWs);
-
-    console.log("reconnected")
-  }
-
   const sketch: Function = (event: MouseEvent | TouchEvent | any, canvas: HTMLCanvasElement): void => {
     if (!paint) return;
 
@@ -100,83 +120,33 @@ const Home: NextPage = () => {
     ctx.lineCap = lineCap;
     ctx.strokeStyle = strokeStyle;
 
-    if (event.touches)
+    if (event.touches) {
+      ctx.moveTo(coord.x, coord.y);
       getPositionTouch(event, canvas);
+    }
 
     else
       getPosition(event, canvas);
 
-    ctx.lineTo(coord.x, coord.y); // try with this only first
+    ctx.lineTo(coord.x, coord.y);
 
     if (wsInstance?.readyState === 1) {
-      wsInstance.send(JSON.stringify({
-        action: "draw",
-        body: {
-          lineTo: coord,
-          strokeStyle
-        }
-      }))
+      try {
+        wsInstance!.send(JSON.stringify({
+          action: "draw",
+          body: {
+            lineTo: coord,
+            strokeStyle
+          }
+        }))
+      } catch (error) {
+        if (error instanceof Error)
+          console.log(error.message);
+      }
     }
 
     ctx.stroke();
   }
-
-  const animation: Function = (): void => {
-    switch (wsInstance?.readyState) {
-      case 0:
-        if (wsState.state !== "Connecting")
-          setWsState({ state: "Connecting", color: "text-yellow-900" });
-        break;
-
-      case 1:
-        if (wsState.state !== "Connected")
-          setWsState({ state: "Connected", color: "text-green-700" });
-        break;
-
-      case 2:
-        if (wsState.state !== "Closing")
-          setWsState({ state: "Closing", color: "text-orange-400" });
-        break;
-
-      case 3:
-        if (wsState.state !== "Closed")
-          setWsState({ state: "Closed", color: "text-red-600" });
-        break;
-    }
-
-    if (wsInstance?.readyState === 1) {
-      wsInstance.onmessage = (messageEvent: MessageEvent<any>) => {
-        const { data: RecievedData } = messageEvent;
-        const data: JSON = JSON.parse(RecievedData);
-        const { action, body }: any = data;
-
-        if (action === "draw") {
-          const canvas: HTMLCanvasElement | null = document.querySelector("#canvas");
-
-          if (canvas) {
-            const ctx: CanvasRenderingContext2D = canvas.getContext("2d")!;
-
-            ctx.beginPath();
-
-            ctx.lineWidth = lineWidth;
-            ctx.lineCap = lineCap;
-            ctx.strokeStyle = body?.strokeStyle || "black";
-
-            const { x, y } = body.lineTo;
-
-            ctx.lineTo(x, y);
-
-            ctx.stroke();
-          }
-        }
-      }
-    }
-
-    requestAnimationFrame(() => animation())
-  }
-
-  if (isBrowser)
-    animation();
 
   return (
     <div className='h-full max-w-screen flex justify-start items-center flex-col'>
@@ -188,14 +158,14 @@ const Home: NextPage = () => {
 
       <main className='h-full w-full flex justify-center items-center relative'>
 
-        <header className='h-20 w-full fixed top-0 left-0 right-0 flex justify-center items-center flex-col'>
+        <header className='h-16 sm:h-20 w-full fixed top-0 left-0 right-0 flex justify-center items-center flex-col'>
           <span className='underline underline-offset-4'>Socket Canvas</span>
           <span className={`${wsState.color}`}>{wsState.state}</span>
         </header>
 
         <canvas className='h-full w-full' id='canvas'></canvas>
 
-        <footer className='h-20 w-full fixed bottom-0 left-0 right-0 flex justify-center items-center flex-col'>
+        <footer className='h-16 sm:h-20 w-full fixed bottom-0 left-0 right-0 flex justify-center items-center flex-col'>
           <a href='https://github.com/tanishq-singh-2301' rel="noreferrer" target="_blank" className='underline underline-offset-4 hover:text-gray-500'>By Tanishq Singh</a>
         </footer>
 
