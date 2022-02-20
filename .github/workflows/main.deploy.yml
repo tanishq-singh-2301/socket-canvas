@@ -100,13 +100,12 @@ jobs:
 
             cd ${fun}
           
-            npm run install
+            npm install
             npm run build
 
             zip -j deploy.zip ./dist/*
             aws lambda update-function-code --function-name=${fun} --zip-file=fileb://deploy.zip
             
-            cd ..
             cd ..
 
           done
