@@ -6,7 +6,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "npx cypress run --config integrationFolder=tests"
+    "test": "npx cypress run --config integrationFolder=cypress/integration"
   },
   "dependencies": {
     "@headlessui/react": "^1.4.3",
