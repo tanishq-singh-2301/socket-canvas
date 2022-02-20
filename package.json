@@ -6,9 +6,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test:backend": "jest ./tests/backend",
-    "test:frontend": "npx cypress run --config integrationFolder=tests/frontend",
-    "test:e2e": "npx cypress run --config integrationFolder=e2e"
+    "test": "npx cypress run --config integrationFolder=tests"
   },
   "dependencies": {
     "@headlessui/react": "^1.4.3",

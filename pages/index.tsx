@@ -12,7 +12,7 @@ const getRandomColor: Function = (): string => {
   return color;
 }
 
-const websocketUrl: string = process.env.NEXT_PUBLIC_WS_ENDPOINT as string;
+const websocketUrl: string = process.env.NEXT_PUBLIC_WS_ENDPOINT as string || "no-link";
 let coord: { x: number; y: number; } = { x: 0, y: 0 };
 let paint: boolean = false;
 const lineWidth = 1;
@@ -52,11 +52,13 @@ const stopPainting: Function = (): void => {
 
 const Home: NextPage = () => {
   const isBrowser: boolean = typeof window !== "undefined";
+  const [wsState, setWsState] = useState<{ state: string; color: string; }>({ state: "Connecting", color: "text-yellow-900" });
   const [wsInstance, setWsInstance] = useState<WebSocket | null>(() => {
-    if (isBrowser)
-      return new WebSocket(websocketUrl);
-
-    else return null;
+    try {
+      if (isBrowser)
+        return new WebSocket(websocketUrl);
+    } catch (error) { }
+    return null;
   });
 
   useEffect(() => {
@@ -120,6 +122,28 @@ const Home: NextPage = () => {
   }
 
   const animation: Function = (): void => {
+    switch (wsInstance?.readyState) {
+      case 0:
+        if (wsState.state !== "Connecting")
+          setWsState({ state: "Connecting", color: "text-yellow-900" });
+        break;
+
+      case 1:
+        if (wsState.state !== "Connected")
+          setWsState({ state: "Connected", color: "text-green-700" });
+        break;
+
+      case 2:
+        if (wsState.state !== "Closing")
+          setWsState({ state: "Closing", color: "text-orange-400" });
+        break;
+
+      case 3:
+        if (wsState.state !== "Closed")
+          setWsState({ state: "Closed", color: "text-red-600" });
+        break;
+    }
+
     if (wsInstance?.readyState === 1) {
       wsInstance.onmessage = (messageEvent: MessageEvent<any>) => {
         const { data: RecievedData } = messageEvent;
@@ -162,8 +186,19 @@ const Home: NextPage = () => {
         <meta name="description" content="Create design 🎨 over multiple devices 💻 connected with the socket 🔐. Using socket-canvas." />
       </Head>
 
-      <main className='h-full w-full flex justify-center items-center'>
-        <canvas className='h-full w-full' id='canvas'></canvas>
+      <main className='h-full w-full flex justify-center items-center relative'>
+
+        <header className='h-20 w-full fixed top-0 left-0 right-0 flex justify-center items-center flex-col'>
+          <span className='underline underline-offset-4'>Socket Canvas</span>
+          <span className={`${wsState.color}`}>{wsState.state}</span>
+        </header>
+
+        <canvas className='h-[calc(100%-10rem)] w-full z-10' id='canvas'></canvas>
+
+        <footer className='h-20 w-full fixed bottom-0 left-0 right-0 flex justify-center items-center flex-col'>
+          <a href='https://github.com/tanishq-singh-2301' rel="noreferrer" target="_blank" className='underline underline-offset-4 hover:text-gray-500'>By Tanishq Singh</a>
+        </footer>
+
       </main>
 
     </div>

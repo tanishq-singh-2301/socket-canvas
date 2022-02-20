@@ -1,0 +1,106 @@
+name: push to master
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  nextjs_build:
+    name: Front-End Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14.x'
+      
+      - name: Installing Packages
+        run: npm install
+
+      - name: Building Application
+        run: npm run build
+
+  frontend_test:
+    needs: [nextjs_build]
+    name: NextJs Unit Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-18.04, ubuntu-20.04]
+        node: [12, 14]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+
+      - name: Cypress run
+        uses: cypress-io/github-action@v2
+        with:
+          build: npm run build
+          start: npm run start
+
+  frontend_deploy:
+    needs: [frontend_test]
+    name: deploy in production
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14.x'
+
+      - name: Set up vercel
+        uses: amondnet/vercel-action@v20
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-args: '--prod'
+          vercel-org-id: ${{ secrets.ORG_ID }}
+          vercel-project-id: ${{ secrets.PROJECT_ID }}
+
+  lambdas_deploy:
+    needs: [frontend_deploy]
+    name: 'Deploying Lambda Functions'
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14.x'
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: "Deploying Function"
+        run: |
+          cd lambdas
+          pwd
+
+          for fun in socket-canvas ; do
+
+            cd ${fun}
+
+            if [[ -f "index.js" ]]; then
+              zip -j deploy.zip ./*
+              aws lambda update-function-code --function-name=${fun} --zip-file=fileb://deploy.zip
+            fi
+            
+            cd ..
+
+          done
