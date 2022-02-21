@@ -3,10 +3,10 @@ const withPWA = require('next-pwa')
 
 const nextConfig = {
   reactStrictMode: true,
-  // pwa: {
-  //   dest: 'public',
-  //   sw: 'service-worker.js'
-  // }
+  pwa: {
+    dest: 'public',
+    sw: 'service-worker.js'
+  }
 }
 
-module.exports = nextConfig;
+module.exports = withPWA(nextConfig);
